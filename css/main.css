@@ -1,0 +1,27 @@
+body{
+	font-family: arial,sans-serif;
+	font-size: 12px;
+	overflow: hidden;
+	background: #333;
+	color:#fff;
+}
+#wrapper{
+	background: url('../img/field.jpg');
+	display: block;
+	position: absolute;
+	border: 1px solid #4f4f4f;
+	border-radius: 3px;
+	color:#636363;
+}
+
+#effect{
+	position: absolute;
+	top:0;
+	left:0;
+	display: none;
+}
+#game{
+	position: absolute;
+	top:0;
+	left:0;
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title> Festember Game </title>
+	</head>
+	<link href="css/main.css" media="screen" type="text/css" rel="stylesheet">
+
+	<!-- GLSL Shaders effect -->
+	<script id="glvertexslshader" type="x-shader/x-vertex">
+		attribute vec2 position;
+		varying vec2 pos;
+		void main(){
+			pos=position;
+			gl_Position =vec4(position.x,position.y,0.0,1.0);
+		}
+	</script>
+	
+	<script id="glfragmentshader" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float	
+		#endif
+			
+		gl_FragColor  = vec4(0,0,1,1);
+	</script>
+	<body>
+		<div id="wrapper">
+			<canvas id="effect"></canvas>
+			<canvas id="game"></canvas>
+		</div>	
+		<div id="menu">
+			<button id="start">Start </button>
+		</div>
+	</body>	
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+</html>
+
+		
