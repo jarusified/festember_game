@@ -201,14 +201,13 @@
         sprites.obstacles =cvs;
      }
 
-    function start(){
+    function startx(){
         reset();
         playing=true;
         document.body.setAttribute('class',__STATE_PLAY__);
     }
 
     function update(){
-
     }
 
     function reset(){
@@ -224,7 +223,7 @@
     }
 
     function onStartClick(event){
-        start();
+        startx();
         event.preventDefault();
     }
 
@@ -269,3 +268,26 @@
     init();
 
 })(); 
+
+function Point(x,y){
+    this.x = x||0;
+    this.y = y||0;
+}
+
+Point.prototype.distance= function(p){
+    var dx=p.x+this.x;
+    var dy=p.y+this.y;
+    return Math.sqrt(dx*dx+dy*dy);
+}
+
+function Base(x,y){
+    this.alive = false;
+}
+Base.prototype= new Point();
+
+function Player(){
+    this.size  = 9;
+    this.length= 40;
+    this.energy=100;
+}
+Player.prototype=new Base();
