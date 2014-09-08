@@ -1,7 +1,7 @@
 (function(){	
     // Game parameters
-    var __WIDTH__      = 1000,
-        __HEIGHT__     =  800,
+    var __WIDTH__      = 800,
+        __HEIGHT__     = 600,
         __FRAMERATE__  =   60,
         __STATE_MENU__ = 'menu',
         __STATE_PLAY__ = 'play',
@@ -33,6 +33,7 @@
         score     = 0,
         duration  = 0,
         particles=[],
+        extinctRegions=[],
         enemies =[];
 
     var requestAnimaFrame = (function(){
@@ -116,6 +117,7 @@
 		var vertices   = [];
 	}
 
+    // game functions 
     function init(){
         container  =  $('#wrapper');
         canvas     =  document.querySelector('#game');
@@ -126,10 +128,14 @@
             document.addEventListener('mousedown',onMouseDownHandler,false);
             document.addEventListener('mouseup',onMouseUpHandler,false);
             document.addEventListener('mousemove',onMouseMoveHandler,false);
+            canvas.addEventListener('touchstart',mouseStartHandler,false);
+            canvas.addEventListener('touchmove', mouseMoveHandler,false);
+            canvas.addEventListener('touchend',mouseEndHandler,false);
             window.addEventListener('resize',onWindowResizeHandler,false);
+ 
             onWindowResizeHandler();
             createSprites();
-            container.fadeIn(__FADEIN_DURATION__);
+           // container.fadeIn(__FADEIN_DURATION__);
         //    menu.hide().delay(__FADEOUT_DURATION__);
             document.body.setAttribute('class',__STATE_MENU__);
             reset();
@@ -139,7 +145,49 @@
             alert("Your browser doesn\'t seem to support HTML5 canvas element, please upgrade your browser.");
         }
     }
-   
+
+    function startx(){
+        reset();
+        playing=true;
+        document.body.setAttribute('class',__STATE_PLAY__);
+    }
+
+    function update(){
+        clear();
+        if(playing){
+            context.save();
+            updateLine();
+            renderLine();
+            context.restore();
+        }
+        requestAnimaFrame(update);
+    }   
+
+    function clear(){
+        console.log("ad");
+        var i = extinctRegions.length;
+        while(i--){
+            var a= extinctRegions[i];
+            console.log(a);
+            context.clearRect(Math.floor(a.x),Math.floor(a.y),Math.ceil(20),Math.ceil(20));
+        }
+        extinctRegions = [];
+    } 
+
+    function reset(){
+        player = new Player();
+        player.x = mouse.x;
+        player.y = mouse.y;
+
+        particles=[];
+        enemies=[];
+        score=0;
+        duration=0;
+        playing=false;
+    }
+
+    
+    // util functions 
     function createSprites(){
         var spriteWidth   = 64,
             spriteHeight  = 64,
@@ -201,27 +249,59 @@
         sprites.obstacles =cvs;
      }
 
-    function startx(){
-        reset();
-        playing=true;
-        document.body.setAttribute('class',__STATE_PLAY__);
+    function updateLine(){
+        player.interpolate(mouse.x,mouse.y,0.4);
+       // console.log(mouse.y);
+        while(player.path.length<player.length){
+            //console.log(player.y);
+            player.path.push(new Point(player.x,player.y));
+        }
+        player.path.shift();
+        //if(player.energy===0){
+            //stop();
+        //}
     }
 
-    function update(){
+    function renderLine(){
+        context.beginPath();
+        var perimeter = new Perimeter();
+        var len = player.path.length;
+ 
+        for(var i=0 ; i<len ; i++){
+            var p1 = player.path[i];
+            var p2 = player.path[i+1];
+            if(i==0){
+                context.moveTo(p1.x+(p2.x-p1.x)/2,p1.y+(p2.y-p1.y)/2);
+            }
+            else if(p2){
+                context.quadraticCurveTo(p1.x,p1.y,p1.x + (p2.x-p1.x)/2,p1.y+(p2.y-p1.y)/2);
+            }
+            perimeter.add(p1.x,p1.y);
+        }
+
+        context.strokeStyle='#648d93';
+        context.lineWidth = 2;
+        context.stroke();
+
+        perimeter.expand(4,4);
+        var perimeterRect = perimeter.rectangle();
+        eliminate(perimeterRect.x,perimeterRect.y,perimeterRect.width,perimeterRect.height);
     }
 
-    function reset(){
-        player = new Player();
-        player.x = mouse.x;
-        player.y = mouse.y;
-
-        particles=[];
-        enemies=[];
-        score=0;
-        duration=0;
-        playing=false;
+    function eliminate(x,y,width,height){
+          extinctRegions.push(
+                            {
+                                x : x,
+                                y : y,
+                                width : width,
+                                height : height
+                            });
     }
 
+
+
+
+    //mouse methods 
     function onStartClick(event){
         startx();
         event.preventDefault();
@@ -230,9 +310,8 @@
     function onMouseMoveHandler(event){
         mouse.previousX = mouse.x;
         mouse.previousY = mouse.y;
-
         mouse.x = event.clientX - (window.innerWidth - world.width)*0.5;
-        mouse.y = event.clientY = (window.innerHeight- world.height)*0.5;
+        mouse.y = event.clientY - (window.innerHeight- world.height)*0.5;
 
         mouse.velocityX = Math.abs( mouse.x - mouse.previousX)/world.width;
         mouse.velocityY = Math.abs( mouse.y - mouse.previousY)/world.height;
@@ -265,10 +344,34 @@
         });
     }   
 
+    function mouseStartHandler(event){
+        if(event.touches.length==1){
+            event.preventDefault();
+            mouse.x=event.touches[0].pageX - ( window.innerWidth - world.width ) + 0.5;
+            mouse.y=event.touches[0].pageY - ( window.innerHeight - world.height ) + 0.5;
+
+            mouse.down =true;
+        }
+    }
+
+    function mouseMoveHandler(event){
+        if(event.touches.length==1 ){
+            event.preventDefault();
+            mouse.x = event.touches[0].pageX - ( window.innerWidth - world.width ) + 0.5;
+            mouse.y = event.touches[0].pageY - (window.innerHeight - world.height ) + 0.5 -20;
+        }
+    }
+
+    function mouseEndHandler(event){
+        mouse.down = false;
+    }
+
     init();
 
 })(); 
 
+
+// classes 
 function Point(x,y){
     this.x = x||0;
     this.y = y||0;
@@ -278,16 +381,55 @@ Point.prototype.distance= function(p){
     var dx=p.x+this.x;
     var dy=p.y+this.y;
     return Math.sqrt(dx*dx+dy*dy);
-}
+};
+Point.prototype.interpolate = function (x,y,imp){
+    this.x += (x - this.x ) * imp;
+    this.y += (y - this.y ) * imp;
+};
+
+
 
 function Base(x,y){
     this.alive = false;
 }
 Base.prototype= new Point();
 
+
+
 function Player(){
+    this.path=[];
     this.size  = 9;
     this.length= 40;
     this.energy=100;
 }
 Player.prototype=new Base();
+
+
+function Perimeter(){
+    this.left = 999999; 
+    this.top = 999999; 
+    this.right = 0; 
+    this.bottom = 0; 
+}
+Perimeter.prototype.reset= function(){
+    this.left = 999999; 
+    this.top = 999999; 
+    this.right = 0; 
+    this.bottom = 0; 
+}
+Perimeter.prototype.add= function(x,y){
+    this.left = Math.min(this.left,x);
+    this.right = Math.min(this.right,x);
+    this.top = Math.min(this.top, y);
+    this.bottom = Math.min(this.bottom,y);
+}
+Perimeter.prototype.expand= function(x,y){
+    this.left -= x;
+    this.top -= y;
+    this.right += x;
+    this.bottom += y;
+}
+Perimeter.prototype.rectangle=function(){
+    return { x: this.left, y: this.top, width: this.right - this.left, height: this.bottom - this.top };
+
+}
