@@ -169,7 +169,7 @@
         while(i--){
             var a= extinctRegions[i];
             console.log(a);
-            context.clearRect(Math.floor(a.x),Math.floor(a.y),Math.ceil(20),Math.ceil(20));
+            context.clearRect(Math.floor(a.x),Math.floor(a.y),Math.ceil(a.width),Math.ceil(a.height));
         }
         extinctRegions = [];
     } 
@@ -251,9 +251,7 @@
 
     function updateLine(){
         player.interpolate(mouse.x,mouse.y,0.4);
-       // console.log(mouse.y);
         while(player.path.length<player.length){
-            //console.log(player.y);
             player.path.push(new Point(player.x,player.y));
         }
         player.path.shift();
@@ -265,21 +263,21 @@
     function renderLine(){
         context.beginPath();
         var perimeter = new Perimeter();
-        var len = player.path.length;
+        var i = player.path.length;
  
-        for(var i=0 ; i<len ; i++){
+        for(var i=0 ,len=player.path.length; i<len ; i++){
             var p1 = player.path[i];
             var p2 = player.path[i+1];
-            if(i==0){
+            if(i===0){
                 context.moveTo(p1.x+(p2.x-p1.x)/2,p1.y+(p2.y-p1.y)/2);
             }
             else if(p2){
                 context.quadraticCurveTo(p1.x,p1.y,p1.x + (p2.x-p1.x)/2,p1.y+(p2.y-p1.y)/2);
             }
-            perimeter.add(p1.x,p1.y);
+            perimeter.extend(p1.x,p1.y);
         }
 
-        context.strokeStyle='#648d93';
+        context.strokeStyle='#648f93';
         context.lineWidth = 2;
         context.stroke();
 
@@ -297,9 +295,6 @@
                                 height : height
                             });
     }
-
-
-
 
     //mouse methods 
     function onStartClick(event){
@@ -417,7 +412,7 @@ Perimeter.prototype.reset= function(){
     this.right = 0; 
     this.bottom = 0; 
 }
-Perimeter.prototype.add= function(x,y){
+Perimeter.prototype.extend= function(x,y){
     this.left = Math.min(this.left,x);
     this.right = Math.min(this.right,x);
     this.top = Math.min(this.top, y);
